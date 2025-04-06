@@ -49,7 +49,11 @@ instances:
   # 示例 1: 香港 VPS，每月 15 号重置
   - identifier: "HK-test" # 必须与 Prometheus 中的 'instance' 标签完全匹配！
     reset_day: 15          # 重置日期 (1到31)
+    traffic_direction: "单向"  # 流量计算方式（单向/双向）
+    monthly_limit: "1TB"  # 每月流量限额
 
   # --- 在这里添加你所有的 VPS 实例及其重置日期 ---
   # - identifier: "your-vps-instance-label"
   #   reset_day: <day_number>
+  #   traffic_direction: "bidirectional"  # 流量计算方式（单向/双向）
+  #   monthly_limit: <bytes_limit>  # 每月流量限额

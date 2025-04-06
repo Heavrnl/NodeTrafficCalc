@@ -40,6 +40,9 @@ config:
     tx: 'node_network_transmit_bytes_total'
     rx: 'node_network_receive_bytes_total'
 
+  # 默认的设备过滤器
+  device_filter_increase: 'device=~"eth.*|ens.*|eno.*|enp.*|enx.*|enX.*|wlan.*|venet.*"'
+
 # --- 实例特定配置 ---
 # 每个实例一个条目
 instances:

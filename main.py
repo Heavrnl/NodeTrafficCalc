@@ -333,6 +333,38 @@ def get_billing_cycle_start(reset_day):
     return start_time.timestamp() # 返回 Unix timestamp
 
 
+def delete_metric(pushgateway_url, push_job_name, instance):
+    """从 Pushgateway 删除指定实例的所有指标
+
+    参数:
+        pushgateway_url: Pushgateway 的 URL
+        push_job_name: 推送使用的 job 名称
+        instance: 实例标识符
+    """
+    try:
+        instance_encoded = quote_plus(instance)
+    except Exception as e:
+        logger.error(f"URL 编码 instance '{instance}' 失败: {e}")
+        return False
+
+    # 删除 URL 格式: /metrics/job/<JOBNAME>/instance/<INSTANCENAME>
+    delete_url = f"{pushgateway_url}/metrics/job/{push_job_name}/instance/{instance_encoded}"
+    logger.debug(f"删除指标: URL={delete_url}")
+
+    try:
+        response = requests.delete(delete_url, timeout=10)
+        # Pushgateway 成功删除通常返回 200 或 202
+        if response.status_code in [200, 202]:
+            logger.info(f"成功删除实例 {instance} 的所有指标")
+            return True
+        else:
+            logger.warning(f"删除实例 {instance} 的指标失败. Status: {response.status_code}, Response: {response.text[:200]}")
+            return False
+    except Exception as e:
+        logger.error(f"删除实例 {instance} 的指标时发生错误: {e}")
+        return False
+
+
 def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text, value, reset_day=None, traffic_direction=None, monthly_limit=None):
     """推送单个指标到 Pushgateway
 
@@ -460,6 +492,9 @@ def process_instances(config):
 
         # 为每个实例的处理添加 try-except 块
         try:
+            # 先删除该实例的所有指标，避免重复
+            delete_metric(pushgateway_url, push_job_name, instance_id)
+
             start_ts = get_billing_cycle_start(reset_day)
             if start_ts is None:
                 logger.error(f"无法计算实例 {instance_id} 的计费开始时间，跳过。")

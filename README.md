@@ -28,19 +28,6 @@ cd NodeTrafficCalc
 vi NodeTrafficCalc/config.yaml
 ```
 
-###  配置示例
-
-```yaml
-instances:
-  # 香港 VPS，每月 15 号重置
-  - identifier: "HK-VPS"  # 必须与 Prometheus 中的 'instance' 标签完全匹配
-    reset_day: 15         # 重置日期 (1-31)
-
-  # 美国 VPS，每月 1 号重置
-  - identifier: "US-VPS"
-    reset_day: 1
-```
-
 ### 3. 启动服务
 ```bash
 docker-compose up -d

@@ -331,7 +331,7 @@ def get_billing_cycle_start(reset_day):
     return start_time.timestamp() # 返回 Unix timestamp
 
 
-def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text, value, reset_day=None):
+def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text, value):
     """推送单个指标到 Pushgateway
 
     参数:
@@ -341,7 +341,6 @@ def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text
         metric_name: 指标名称
         help_text: 指标的帮助文本
         value: 指标值
-        reset_day: 重置日，将作为标签添加到指标中
     """
     if value is None: # 不推送 None 值 (表示计算失败)
         logger.debug(f"值为 None，跳过推送指标 {metric_name} for instance {instance}")
@@ -358,10 +357,7 @@ def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text
         return False
 
     # 构造符合 Prometheus text format 的 payload
-    # 如果提供了 reset_day，则将其作为标签添加到指标中
     labels = f'instance="{instance}"'
-    if reset_day is not None:
-        labels += f', reset_day="{reset_day}"'
 
     payload = f"""\
 # HELP {metric_name} {help_text}
@@ -459,7 +455,7 @@ def process_instances(config):
             tx_value = int(round(increase_tx)) if increase_tx is not None else None
             if push_metric(pushgateway_url, push_job_name, instance_id, tx_metric_name,
                            f"Bytes transmitted since last reset day (increase) for {instance_id}",
-                           tx_value, reset_day):
+                           tx_value):
                 success_pushes += 1
             elif tx_value is not None: # 仅当值不是 None 时才算推送失败
                 failed_pushes += 1
@@ -470,7 +466,7 @@ def process_instances(config):
 
             if push_metric(pushgateway_url, push_job_name, instance_id, rx_metric_name,
                            f"Bytes received since last reset day (increase) for {instance_id}",
-                           rx_value, reset_day):
+                           rx_value):
                 success_pushes += 1
             elif rx_value is not None:
                 failed_pushes += 1
@@ -489,7 +485,7 @@ def process_instances(config):
             total_metric_name = metric_names['total_increase']
             if push_metric(pushgateway_url, push_job_name, instance_id, total_metric_name,
                            f"Total bytes (TX+RX) since last reset day (increase) for {instance_id}",
-                           total_increase, reset_day):
+                           total_increase):
                 success_pushes += 1
             elif total_increase is not None:
                 failed_pushes += 1

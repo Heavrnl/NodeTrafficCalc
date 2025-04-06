@@ -1,4 +1,4 @@
-# 📊 NodeTrafficCalc - 多实例月流量计算器
+# NodeTrafficCalc - 多实例月流量计算器
 
 ## 📝 项目简介
 
@@ -15,20 +15,20 @@
 
 ## 🚀 快速启动
 
-### 💼 1. 克隆仓库
+###  1. 克隆仓库
 
 ```bash
 git clone https://github.com/Heavrnl/NodeTrafficCalc
 cd NodeTrafficCalc
 ```
-### ⚙️ 2. 配置实例
+###  2. 配置实例
 
 编辑配置文件，在 instances 部分添加你的实例和对应的重置日：
 ```bash
 vi NodeTrafficCalc/config.yaml
 ```
 
-### 📝 配置示例
+####  配置示例
 
 ```yaml
 instances:
@@ -41,7 +41,7 @@ instances:
     reset_day: 1
 ```
 
-### ▶️ 3. 启动服务
+###  3. 启动服务
 ```bash
 docker-compose up -d
 ```

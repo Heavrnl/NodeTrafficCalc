@@ -1,0 +1,20 @@
+services:
+  pushgateway:
+    image: prom/pushgateway:latest
+    container_name: pushgateway
+    ports:
+      - "127.0.0.1:9091:9091"
+    restart: unless-stopped
+
+  node-traffic-calc:
+    image: heavrnl/node-traffic-calc:latest
+    container_name: node-traffic-calc
+    network_mode: host
+    volumes:
+      - ./NodeTrafficCalc/config.yaml:/app/config.yaml
+      - ./NodeTrafficCalc/logs:/app/logs
+    restart: unless-stopped
+
+networks:
+  monitoring:
+    driver: bridge

@@ -1,0 +1,52 @@
+config:
+  # --- 连接设置 ---
+  # Prometheus 服务器的 URL
+  prometheus_url: 'http://localhost:9090'
+  # Pushgateway 服务的 URL
+  pushgateway_url: 'http://localhost:9091'
+  # 推送到 Pushgateway 时使用的 Job 名称
+  push_job_name: 'monthly_traffic_calculator'
+
+  # --- 日志设置 ---
+  # 是否启用日志记录 (true/false)
+  # 设置为 false 将禁用所有日志输出 (文件和控制台)
+  logging_enabled: true
+  # 日志文件保存路径
+  log_file: 'logs/monthly_traffic_calc_service.log'
+
+  log_level: 'INFO'
+  # 是否启用日志文件轮转 (基于大小) (true/false)
+  log_rotation_enabled: true
+  # 单个日志文件的最大大小 (bytes)
+  # 示例: 10MB = 10 * 1024 * 1024 = 10485760
+  log_max_bytes: 10485760
+  # 保留的备份日志文件数量
+  # 例如，设置为 5，则会有 log_file, log_file.1, ..., log_file.5
+  log_backup_count: 5
+
+  # --- 时间设置 ---
+  # 脚本每次计算循环之间的休眠时间（秒）
+  loop_interval_seconds: 5
+
+  # --- 指标名称和查询配置 ---
+  # 定义推送到 Pushgateway 的指标名称
+  metric_names:
+    tx_increase: "instance_monthly_transmit_bytes_increase"
+    rx_increase: "instance_monthly_receive_bytes_increase"
+    total_increase: "instance_monthly_total_bytes_increase"
+
+  # 定义要查询的 Prometheus 原始计数器指标名称
+  base_metrics:
+    tx: 'node_network_transmit_bytes_total'
+    rx: 'node_network_receive_bytes_total'
+
+# --- 实例特定配置 ---
+# 每个实例一个条目
+instances:
+  # 示例 1: 香港 VPS，每月 15 号重置
+  - identifier: "HK-test" # 必须与 Prometheus 中的 'instance' 标签完全匹配！
+    reset_day: 15          # 重置日期 (1到31)
+
+  # --- 在这里添加你所有的 VPS 实例及其重置日期 ---
+  # - identifier: "your-vps-instance-label"
+  #   reset_day: <day_number>

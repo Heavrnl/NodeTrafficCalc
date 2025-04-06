@@ -1,3 +1,4 @@
+
 import requests
 import yaml
 import time
@@ -8,6 +9,7 @@ import sys
 from urllib.parse import quote_plus
 import signal
 import os
+import re
 
 
 CONFIG_FILE = 'config.yaml'
@@ -329,7 +331,7 @@ def get_billing_cycle_start(reset_day):
     return start_time.timestamp() # 返回 Unix timestamp
 
 
-def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text, value, reset_day=None):
+def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text, value, reset_day=None, device_filter=None):
     """推送单个指标到 Pushgateway
 
     参数:
@@ -340,6 +342,7 @@ def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text
         help_text: 指标的帮助文本
         value: 指标值
         reset_day: 重置日，将作为标签添加到指标中
+        device_filter: 设备过滤器，将作为 device 标签添加到指标中
     """
     if value is None: # 不推送 None 值 (表示计算失败)
         logger.debug(f"值为 None，跳过推送指标 {metric_name} for instance {instance}")
@@ -356,18 +359,17 @@ def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text
         return False
 
     # 构造符合 Prometheus text format 的 payload
-    # 如果提供了 reset_day，则将其作为标签添加到指标中
+    # 如果提供了 reset_day 或 device_filter，则将其作为标签添加到指标中
+    labels = f'instance="{instance}"'
     if reset_day is not None:
-        payload = f"""\
+        labels += f', reset_day="{reset_day}"'
+    if device_filter is not None:
+        labels += f', device="{device_filter}"'
+
+    payload = f"""\
 # HELP {metric_name} {help_text}
 # TYPE {metric_name} gauge
-{metric_name}{{instance="{instance}", reset_day="{reset_day}"}} {value}
-"""
-    else:
-        payload = f"""\
-# HELP {metric_name} {help_text}
-# TYPE {metric_name} gauge
-{metric_name}{{instance="{instance}"}} {value}
+{metric_name}{{{labels}}} {value}
 """
     # 推送 URL 格式: /metrics/job/<JOBNAME>/instance/<INSTANCENAME>
     push_url = f"{pushgateway_url}/metrics/job/{push_job_name}/instance/{instance_encoded}"
@@ -468,9 +470,19 @@ def process_instances(config):
             # --- 推送 RX Increase ---
             rx_metric_name = metric_names['rx_increase']
             rx_value = int(round(increase_rx)) if increase_rx is not None else None
+            # 从 Prometheus 查询中获取设备列表
+            device_query = 'group by(device) (node_network_receive_bytes_total)'
+            device_data = query_prometheus(prometheus_url, device_query)
+            if device_data and device_data.get('result'):
+                devices = [result['metric'].get('device') for result in device_data['result']
+                          if re.match(r'(eth.*|ens.*|eno.*|enp.*|enx.*|enX.*|wlan.*|venet.*)', result['metric'].get('device', ''))]
+                device_filter = '|'.join(devices) if devices else None
+            else:
+                device_filter = None
+
             if push_metric(pushgateway_url, push_job_name, instance_id, rx_metric_name,
                            f"Bytes received since last reset day (increase) for {instance_id}",
-                           rx_value, reset_day):
+                           rx_value, reset_day, device_filter):
                 success_pushes += 1
             elif rx_value is not None:
                 failed_pushes += 1
@@ -595,3 +607,4 @@ if __name__ == "__main__":
         # 确保服务停止时记录日志并关闭处理器
         logger.info("流量计算服务已停止。")
         logging.shutdown() # 关闭所有日志处理器
+

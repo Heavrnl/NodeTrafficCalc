@@ -456,38 +456,16 @@ def process_instances(config):
             increase_tx = calculate_increase_value(prometheus_url, instance_id, base_metrics['tx'], device_filter_increase, start_ts, now_ts)
             increase_rx = calculate_increase_value(prometheus_url, instance_id, base_metrics['rx'], device_filter_increase, start_ts, now_ts)
 
-            # --- 推送 TX Increase ---
+            # 准备指标值
             tx_metric_name = metric_names['tx_increase']
+            rx_metric_name = metric_names['rx_increase']
+            total_metric_name = metric_names['total_increase']
+
             # 如果计算失败 (返回 None)，则推送时跳过；如果计算结果为 0，则推送 0
             tx_value = int(round(increase_tx)) if increase_tx is not None else None
-            if push_metric(pushgateway_url, push_job_name, instance_id, tx_metric_name,
-                           f"Bytes transmitted since last reset day (increase) for {instance_id}",
-                           tx_value, reset_day):
-                success_pushes += 1
-            elif tx_value is not None: # 仅当值不是 None 时才算推送失败
-                failed_pushes += 1
-
-            # --- 推送 RX Increase ---
-            rx_metric_name = metric_names['rx_increase']
             rx_value = int(round(increase_rx)) if increase_rx is not None else None
-            # 从 Prometheus 查询中获取设备列表
-            device_query = 'group by(device) (node_network_receive_bytes_total)'
-            device_data = query_prometheus(prometheus_url, device_query)
-            if device_data and device_data.get('result'):
-                devices = [result['metric'].get('device') for result in device_data['result']
-                          if re.match(r'(eth.*|ens.*|eno.*|enp.*|enx.*|enX.*|wlan.*|venet.*)', result['metric'].get('device', ''))]
-                device_filter = '|'.join(devices) if devices else None
-            else:
-                device_filter = None
 
-            if push_metric(pushgateway_url, push_job_name, instance_id, rx_metric_name,
-                           f"Bytes received since last reset day (increase) for {instance_id}",
-                           rx_value, reset_day, device_filter):
-                success_pushes += 1
-            elif rx_value is not None:
-                failed_pushes += 1
-
-            # --- 计算并推送 Total Increase ---
+            # 计算总流量
             total_increase = None
             # 只有在 TX 和 RX 都成功计算出数值 (不是 None) 时才相加
             if tx_value is not None and rx_value is not None:
@@ -498,13 +476,67 @@ def process_instances(config):
                 total_increase = rx_value
             # 如果两者都计算失败 (值为 None)，total_increase 保持 None
 
-            total_metric_name = metric_names['total_increase']
-            if push_metric(pushgateway_url, push_job_name, instance_id, total_metric_name,
-                           f"Total bytes (TX+RX) since last reset day (increase) for {instance_id}",
-                           total_increase, reset_day):
-                success_pushes += 1
-            elif total_increase is not None:
-                failed_pushes += 1
+            # 从 Prometheus 查询中获取设备列表
+            device_query = 'group by(device) (node_network_receive_bytes_total)'
+            device_data = query_prometheus(prometheus_url, device_query)
+            devices = []
+            if device_data and device_data.get('result'):
+                devices = [result['metric'].get('device') for result in device_data['result']
+                          if re.match(r'(eth.*|ens.*|eno.*|enp.*|enx.*|enX.*|wlan.*|venet.*)', result['metric'].get('device', ''))]
+
+            # 如果没有找到设备，推送不带device标签的指标
+            if not devices:
+                logger.warning(f"未找到匹配的网络设备，将推送不带device标签的指标 for {instance_id}")
+                # 推送TX指标
+                if push_metric(pushgateway_url, push_job_name, instance_id, tx_metric_name,
+                              f"Bytes transmitted since last reset day (increase) for {instance_id}",
+                              tx_value, reset_day):
+                    success_pushes += 1
+                elif tx_value is not None: # 仅当值不是 None 时才算推送失败
+                    failed_pushes += 1
+
+                # 推送RX指标
+                if push_metric(pushgateway_url, push_job_name, instance_id, rx_metric_name,
+                              f"Bytes received since last reset day (increase) for {instance_id}",
+                              rx_value, reset_day):
+                    success_pushes += 1
+                elif rx_value is not None:
+                    failed_pushes += 1
+
+                # 推送Total指标
+                if push_metric(pushgateway_url, push_job_name, instance_id, total_metric_name,
+                              f"Total bytes (TX+RX) since last reset day (increase) for {instance_id}",
+                              total_increase, reset_day):
+                    success_pushes += 1
+                elif total_increase is not None:
+                    failed_pushes += 1
+            else:
+                # 为每个设备单独推送指标
+                logger.info(f"找到 {len(devices)} 个网络设备，将为每个设备单独推送指标 for {instance_id}: {devices}")
+                for device in devices:
+                    # 推送TX指标
+                    if push_metric(pushgateway_url, push_job_name, instance_id, tx_metric_name,
+                                  f"Bytes transmitted since last reset day (increase) for {instance_id}",
+                                  tx_value, reset_day, device):
+                        success_pushes += 1
+                    elif tx_value is not None: # 仅当值不是 None 时才算推送失败
+                        failed_pushes += 1
+
+                    # 推送RX指标
+                    if push_metric(pushgateway_url, push_job_name, instance_id, rx_metric_name,
+                                  f"Bytes received since last reset day (increase) for {instance_id}",
+                                  rx_value, reset_day, device):
+                        success_pushes += 1
+                    elif rx_value is not None:
+                        failed_pushes += 1
+
+                    # 推送Total指标
+                    if push_metric(pushgateway_url, push_job_name, instance_id, total_metric_name,
+                                  f"Total bytes (TX+RX) since last reset day (increase) for {instance_id}",
+                                  total_increase, reset_day, device):
+                        success_pushes += 1
+                    elif total_increase is not None:
+                        failed_pushes += 1
 
         except Exception as e:
             # 捕获处理单个实例时发生的任何未预料的错误

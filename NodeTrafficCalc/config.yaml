@@ -53,7 +53,7 @@ instances:
     labels:
       traffic_direction: "单向"  # 流量计算方式（单向/双向）
       monthly_limit: "1TB"  # 每月流量限额
-      monthly_limit_gb: 1000  # 每月流量限额（字节）
+      monthly_limit_gb: 1000  # 每月流量限额（GB）
       bandwidth_limit: "1000Mbps"  # 带宽限制
       bandwidth_type: "共享" # 带宽类型（共享/独享）
 

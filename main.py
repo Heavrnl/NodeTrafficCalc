@@ -69,12 +69,12 @@ def setup_logging(config):
         backup_count = DEFAULT_CONFIG['log_backup_count']
         print(f"警告：无效的 log_backup_count 配置值，使用默认值: {backup_count}", file=sys.stderr)
 
-    # 清除当前 logger 实例上所有已存在的 handlers，防止重复添加
+ 
     for handler in logger.handlers[:]:
         logger.removeHandler(handler)
         handler.close()
 
-    # 如果日志被禁用，设置一个极高的日志级别并添加 NullHandler
+
     if not enabled:
         logger.setLevel(logging.CRITICAL + 1)
         logger.addHandler(logging.NullHandler())

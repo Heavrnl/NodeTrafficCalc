@@ -75,7 +75,7 @@ instance_monthly_total_bytes_increase{job="monthly_traffic_calculator", instance
 instance_info{instance=~"$node"}
 ```
 
-### 全局变量
+### Grafana变量
 ```
 reset_day
 label_values(instance_info{instance="$node"},reset_day)	

@@ -68,7 +68,9 @@ instance_monthly_total_bytes_increase{job="monthly_traffic_calculator", instance
 instance_info{instance=~"$node"}
 ```
 
+
 ### Grafana变量
+在面板上的Settings里配置以下变量，参考图里的设置，你有多少个自定义标签，就添加多少个变量
 ```
 reset_day
 label_values(instance_info{instance="$node"},reset_day)	
@@ -87,10 +89,18 @@ label_values(instance_info{instance="$node"},bandwidth_limit)
 monthly_limit
 label_values(instance_info{instance="$node"},monthly_limit)
 ```
+
 ### 变量配置示例
 ![image](./imgs/3.png)
 
+
+示例：在Title里使用
+```
+当前月流量统计（每月 $reset_day 日重置）
+```
+
 ### Text 面板 html
+添加可视化，选择Text面板
 ```html
 <div style="color: #dcdcdc; 
            padding: 13px 25px; 

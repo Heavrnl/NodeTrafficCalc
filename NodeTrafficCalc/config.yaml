@@ -26,7 +26,7 @@ config:
 
   # --- 时间设置 ---
   # 脚本每次计算循环之间的休眠时间（秒）
-  loop_interval_seconds: 5
+  loop_interval_seconds: 10
 
   # --- 指标名称和查询配置 ---
   # 定义推送到 Pushgateway 的指标名称
@@ -55,7 +55,7 @@ instances:
       monthly_limit: "1TB"  # 每月流量限额
       monthly_limit_gb: 1000  # 每月流量限额（GB）
       bandwidth_limit: "1000Mbps"  # 带宽限制
-      bandwidth_type: "共享" # 带宽类型（共享/独享）
+      # bandwidth_type: "共享" # 带宽类型（共享/独享）
 
 
   # --- 在这里添加你所有的 VPS 实例及其配置 ---

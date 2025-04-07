@@ -1,8 +1,8 @@
-# 📊 NodeTrafficCalc - 多实例月流量计算器
+# 📊 NodeTrafficCalc
 
 ## 📝 项目简介
 
-**NodeTrafficCalc** 是一个专为解决 Grafana + Prometheus + node_exporter 中不同实例有不同月流量重置日的问题而设计的工具。在传统的监控系统中，所有实例通常共享同一个流量统计周期，这无法满足不同 VPS 服务商有不同计费周期的实际需求。本项目通过自定义计算和指标推送，使每个实例能够根据其特定的月重置日来计算和展示流量数据。
+**NodeTrafficCalc** 是一个专为解决 Grafana + Prometheus + node_exporter 中不同实例有不同月流量重置日的问题而设计的工具。在原监控系统中，所有实例通常共享同一个流量统计周期，这无法满足不同实例服务商有不同计费周期的实际需求。本项目通过自定义计算和指标推送，使每个实例能够根据其特定的月重置日来计算和展示流量数据。
 
 
 
@@ -59,7 +59,112 @@ instance_monthly_receive_bytes_increase{job="monthly_traffic_calculator", instan
 instance_monthly_total_bytes_increase{job="monthly_traffic_calculator", instance=~"$node"}
 ```
 
-其他
+### 其他
 ```
 instance_info{instance=~"$node"}
 ```
+
+### 全局变量
+```
+reset_day
+label_values(instance_info{instance="$node"},reset_day)	
+
+
+traffic_direction
+label_values(instance_info{instance="$node"},traffic_direction)	
+
+
+
+bandwidth_limit
+label_values(instance_info{instance="$node"},bandwidth_limit)	
+
+
+
+monthly_limit
+label_values(instance_info{instance="$node"},monthly_limit)
+```
+
+### Text 面板 html
+```html
+<div style="color: #dcdcdc; 
+           padding: 13px 25px; 
+           border-radius: 8px; 
+           background: linear-gradient(135deg, #34495e 0%, #5d6d7e 100%); 
+           box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); 
+           width: 100%; 
+           font-family: 'Segoe UI', 'Roboto', sans-serif; 
+           margin: 10px 0; 
+           position: relative;
+           box-sizing: border-box;">
+  
+  <div style="padding-bottom: 12px; 
+              margin-bottom: 12px; 
+              border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+              display: flex; 
+              align-items: baseline; 
+              line-height: 1.6;">
+    <span style="font-weight: 500; 
+               color: #a0b3c4; 
+               margin-right: 10px; 
+               flex-shrink: 0; 
+               min-width: 55px; 
+               font-size: 0.9em;">
+      流量:
+    </span>
+    <span style="color: #f0f0f0; 
+               font-weight: 600; 
+               font-size: 1.05em; 
+               word-break: break-word;">
+      $monthly_limit ($traffic_direction)
+    </span>
+  </div>
+  
+  <div style="padding-bottom: 12px; 
+              margin-bottom: 12px; 
+              border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+              display: flex; 
+              align-items: baseline; 
+              line-height: 1.6;">
+    <span style="font-weight: 500; 
+               color: #a0b3c4; 
+               margin-right: 10px; 
+               flex-shrink: 0; 
+               min-width: 55px; 
+               font-size: 0.9em;">
+      带宽:
+    </span>
+    <span style="color: #f0f0f0; 
+               font-weight: 600; 
+               font-size: 1.05em; 
+               word-break: break-word;">
+      $bandwidth_limit
+    </span>
+  </div>
+  
+  <div style="/* 最后一行无下边框 */
+              display: flex; 
+              align-items: baseline; 
+              line-height: 1.6;"> 
+    <span style="font-weight: 500; 
+               color: #a0b3c4; 
+               margin-right: 10px; 
+               flex-shrink: 0; 
+               min-width: 55px; 
+               font-size: 0.9em;">
+      周期:
+    </span>
+    <span style="color: #f0f0f0; 
+               font-weight: 600; 
+               font-size: 1.05em; 
+               word-break: break-word;">
+      每月 $reset_day 号
+    </span>
+  </div>
+
+</div>
+```
+
+## 示例图
+![image](./imgs/2.png)
+![image](./imgs/1.png)
+

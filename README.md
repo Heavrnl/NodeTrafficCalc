@@ -24,7 +24,7 @@ cd NodeTrafficCalc
 ```
 ###  2. 配置实例
 
-编辑配置文件，在 instances 部分添加你的实例和对应的重置日：
+编辑配置文件，在 instances 部分添加你的实例和对应的重置日，并配置你的Prometheus 服务器的 URL：
 ```bash
 vi NodeTrafficCalc/config.yaml
 ```

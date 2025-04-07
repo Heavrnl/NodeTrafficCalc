@@ -75,16 +75,11 @@ instance_info{instance=~"$node"}
 reset_day
 label_values(instance_info{instance="$node"},reset_day)	
 
-
 traffic_direction
 label_values(instance_info{instance="$node"},traffic_direction)	
 
-
-
 bandwidth_limit
 label_values(instance_info{instance="$node"},bandwidth_limit)	
-
-
 
 monthly_limit
 label_values(instance_info{instance="$node"},monthly_limit)

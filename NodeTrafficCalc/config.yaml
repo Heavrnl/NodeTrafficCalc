@@ -9,7 +9,6 @@ config:
 
   # --- 日志设置 ---
   # 是否启用日志记录 (true/false)
-  # 设置为 false 将禁用所有日志输出 (文件和控制台)
   logging_enabled: true
   # 日志文件保存路径
   log_file: 'logs/monthly_traffic_calc_service.log'

@@ -39,6 +39,7 @@ DEFAULT_CONFIG = {
         'total_increase': "instance_monthly_total_bytes_increase",
         'monthly_limit': "instance_monthly_limit_bytes",
         'remaining_bytes': "instance_monthly_remaining_bytes",
+        'instance_info': "instance_info",  # 实例信息指标，用于展示所有标签
     },
     'base_metrics': {
         'tx': 'node_network_transmit_bytes_total',
@@ -461,6 +462,14 @@ def process_instances(config):
 
         # 为每个实例的处理添加 try-except 块
         try:
+            # 首先推送实例信息指标，包含所有标签
+            instance_info_metric = metric_names.get('instance_info', 'instance_info')
+            if push_metric(pushgateway_url, push_job_name, instance_id, instance_info_metric,
+                          f"Instance information for {instance_id}",
+                          1, reset_day, custom_labels):
+                success_pushes += 1
+            else:
+                failed_pushes += 1
             start_ts = get_billing_cycle_start(reset_day)
             if start_ts is None:
                 logger.error(f"无法计算实例 {instance_id} 的计费开始时间，跳过。")

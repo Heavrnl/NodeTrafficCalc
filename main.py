@@ -333,7 +333,7 @@ def get_billing_cycle_start(reset_day):
     return start_time.timestamp() # 返回 Unix timestamp
 
 
-def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text, value, reset_day=None, traffic_direction=None, monthly_limit=None):
+def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text, value, reset_day=None, custom_labels=None):
     """推送单个指标到 Pushgateway
 
     参数:
@@ -344,8 +344,7 @@ def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text
         help_text: 指标的帮助文本
         value: 指标值
         reset_day: 重置日期 (1-31)，将作为标签添加到指标中
-        traffic_direction: 流量计算方式 (bidirectional/upload/download)
-        monthly_limit: 每月流量限额（字节）
+        custom_labels: 自定义标签字典，将被添加到指标中
     """
     if value is None: # 不推送 None 值 (表示计算失败)
         logger.debug(f"值为 None，跳过推送指标 {metric_name} for instance {instance}")
@@ -368,11 +367,14 @@ def push_metric(pushgateway_url, push_job_name, instance, metric_name, help_text
     if reset_day is not None:
         labels_parts.append(f'reset_day="{reset_day}"')
 
-    if traffic_direction is not None:
-        labels_parts.append(f'traffic_direction="{traffic_direction}"')
-
-    if monthly_limit is not None:
-        labels_parts.append(f'monthly_limit="{monthly_limit}"')
+    # 添加自定义标签
+    if custom_labels and isinstance(custom_labels, dict):
+        for label_name, label_value in custom_labels.items():
+            if label_name and label_value is not None:
+                # 转义标签名称和值中的特殊字符
+                safe_label_name = str(label_name).replace('"', '\"')
+                safe_label_value = str(label_value).replace('"', '\"')
+                labels_parts.append(f'{safe_label_name}="{safe_label_value}"')
 
     # 将所有标签部分用逗号连接
     labels = ', '.join(labels_parts)
@@ -445,8 +447,7 @@ def process_instances(config):
 
         instance_id = item.get('identifier')
         reset_day = item.get('reset_day')
-        traffic_direction = item.get('traffic_direction')  # 获取流量计算方式
-        monthly_limit = item.get('monthly_limit')  # 获取每月流量限额
+        custom_labels = item.get('labels', {})  # 获取自定义标签
 
         # 验证实例配置
         if not instance_id or not isinstance(instance_id, str) or \
@@ -456,7 +457,7 @@ def process_instances(config):
             continue
 
         # 记录新配置项的详细信息
-        logger.debug(f"--- 处理实例: {instance_id}, 重置日: {reset_day}, 流量计算方式: {traffic_direction}, 流量限额: {monthly_limit} ---")
+        logger.debug(f"--- 处理实例: {instance_id}, 重置日: {reset_day}, 自定义标签: {custom_labels} ---")
 
         # 为每个实例的处理添加 try-except 块
         try:
@@ -476,7 +477,7 @@ def process_instances(config):
             tx_value = int(round(increase_tx)) if increase_tx is not None else None
             if push_metric(pushgateway_url, push_job_name, instance_id, tx_metric_name,
                            f"Bytes transmitted since last reset day (increase) for {instance_id}",
-                           tx_value, reset_day, traffic_direction, monthly_limit):
+                           tx_value, reset_day, custom_labels):
                 success_pushes += 1
             elif tx_value is not None: # 仅当值不是 None 时才算推送失败
                 failed_pushes += 1
@@ -487,7 +488,7 @@ def process_instances(config):
 
             if push_metric(pushgateway_url, push_job_name, instance_id, rx_metric_name,
                            f"Bytes received since last reset day (increase) for {instance_id}",
-                           rx_value, reset_day, traffic_direction, monthly_limit):
+                           rx_value, reset_day, custom_labels):
                 success_pushes += 1
             elif rx_value is not None:
                 failed_pushes += 1
@@ -506,7 +507,7 @@ def process_instances(config):
             total_metric_name = metric_names['total_increase']
             if push_metric(pushgateway_url, push_job_name, instance_id, total_metric_name,
                            f"Total bytes (TX+RX) since last reset day (increase) for {instance_id}",
-                           total_increase, reset_day, traffic_direction, monthly_limit):
+                           total_increase, reset_day, custom_labels):
                 success_pushes += 1
             elif total_increase is not None:
                 failed_pushes += 1

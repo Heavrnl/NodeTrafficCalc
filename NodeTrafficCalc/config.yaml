@@ -21,11 +21,10 @@ config:
   # 示例: 10MB = 10 * 1024 * 1024 = 10485760
   log_max_bytes: 10485760
   # 保留的备份日志文件数量
-  # 例如，设置为 5，则会有 log_file, log_file.1, ..., log_file.5
   log_backup_count: 5
 
   # --- 时间设置 ---
-  # 脚本每次计算循环之间的休眠时间（秒）
+  # 轮询时间（秒）
   loop_interval_seconds: 10
 
   # --- 指标名称和查询配置 ---

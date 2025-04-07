@@ -33,6 +33,17 @@ vi NodeTrafficCalc/config.yaml
 docker-compose up -d
 ```
 
+### 4. 配置 prometheus.yml
+在scrape_configs中添加
+```yaml
+- job_name: 'pushgateway'
+  scrape_interval: 10s
+  honor_labels: true
+  static_configs:
+    - targets: ['localhost:9091']
+```
+### 5. 重启 prometheus
+
 ## 🔧 工作原理
 
 1. 从配置文件中读取每个实例的标识符和重置日期

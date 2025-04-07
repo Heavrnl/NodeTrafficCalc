@@ -43,16 +43,8 @@ docker-compose up -d
   static_configs:
     - targets: ['localhost:9091']
 ```
-### 5. 重启 prometheus
+ 重启 prometheus
 
-## 🔧 工作原理
-
-1. 从配置文件中读取每个实例的标识符和重置日期
-2. 根据当前日期和实例的重置日，计算当前计费周期的开始时间
-3. 从 Prometheus 查询该实例在计费周期内的网络流量数据
-4. 计算周期内的流量增长值
-5. 将计算结果推送到 Pushgateway，包含实例标识符和重置日标签
-6. Prometheus 从 Pushgateway 抓取数据，Grafana 展示结果
 
 ## 在 Grafana 中使用
 

@@ -59,4 +59,7 @@ instance_monthly_receive_bytes_increase{job="monthly_traffic_calculator", instan
 instance_monthly_total_bytes_increase{job="monthly_traffic_calculator", instance=~"$node"}
 ```
 
-
+其他
+```
+instance_info{instance=~"$node"}
+```

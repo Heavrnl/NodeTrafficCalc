@@ -69,7 +69,7 @@ instance_info{instance=~"$node"}
 ```
 
 
-### Grafana变量
+### 变量
 在面板上的Settings里配置以下变量，参考图里的设置，你有多少个自定义标签，就添加多少个变量
 ```
 reset_day

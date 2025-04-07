@@ -537,7 +537,6 @@ def process_instances(config):
 def main_loop():
     """主循环，定期执行处理"""
     # 加载一次初始配置以获取循环间隔和设置日志
-    # 使用 try-except 包装，以防初始加载失败
     try:
         initial_config = load_config()
         setup_logging(initial_config) # 使用加载的配置设置日志
@@ -600,7 +599,7 @@ def main_loop():
 if __name__ == "__main__":
     # 初始加载配置并设置日志
     initial_config = load_config()
-    setup_logging(initial_config) # 现在 setup_logging 会处理日志配置
+    setup_logging(initial_config) 
 
     # 注册信号处理
     signal.signal(signal.SIGINT, signal_handler)

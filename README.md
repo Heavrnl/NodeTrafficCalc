@@ -95,6 +95,8 @@ label_values(instance_info{instance="$node"},bandwidth_limit)
 monthly_limit
 label_values(instance_info{instance="$node"},monthly_limit)
 ```
+### 变量配置示例
+![image](./imgs/3.png)
 
 ### Text 面板 html
 ```html

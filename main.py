@@ -470,6 +470,22 @@ def process_instances(config):
                 success_pushes += 1
             else:
                 failed_pushes += 1
+
+            # --- 推送 Monthly Limit (Bytes) ---
+            limit_gb = custom_labels.get('monthly_limit_gb')
+            if limit_gb is not None:
+                try:
+                    limit_bytes = float(limit_gb) * 1024 * 1024 * 1024
+                    limit_metric_name = metric_names.get('monthly_limit', 'instance_monthly_limit_bytes')
+
+                    if push_metric(pushgateway_url, push_job_name, instance_id, limit_metric_name,
+                                   f"Monthly traffic limit in bytes for {instance_id}",
+                                   limit_bytes, reset_day, custom_labels):
+                        success_pushes += 1
+                    else:
+                        failed_pushes += 1
+                except (ValueError, TypeError):
+                    logger.warning(f"无法解析 monthly_limit_gb: {limit_gb} for instance {instance_id}")
             start_ts = get_billing_cycle_start(reset_day)
             if start_ts is None:
                 logger.error(f"无法计算实例 {instance_id} 的计费开始时间，跳过。")

@@ -464,9 +464,9 @@ def process_instances(config):
         try:
             # 首先推送实例信息指标，包含所有标签
             instance_info_metric = metric_names.get('instance_info', 'instance_info')
-            if push_metric(pushgateway_url, push_job_name, instance_id, instance_info_metric,
-                          f"Instance information for {instance_id}",
-                          1, reset_day, custom_labels):
+            if push_metric(pushgateway_url, push_job_name, instance_id, limit_metric_name,
+                                "Monthly traffic limit in bytes",
+                                limit_bytes, reset_day, custom_labels):
                 success_pushes += 1
             else:
                 failed_pushes += 1
